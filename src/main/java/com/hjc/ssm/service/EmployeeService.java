@@ -24,4 +24,9 @@ public class EmployeeService {
     public List<Employee> getAllEmps() {
         return employeeMapper.selectByExampleWithDpt(null);
     }
+
+    public void insertEmp(Employee employee) {
+        System.out.println(employee);
+        employeeMapper.insertSelective(employee);
+    }
 }

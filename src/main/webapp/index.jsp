@@ -17,6 +17,62 @@
 </head>
 <body>
 
+    <div class="modal fade" id="insertModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">新增员工</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group row">
+                <label for="staticEmail" class="col-sm-2 col-form-label">姓名</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" id="empName_input" name="empName">
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputPassword" class="col-sm-2 col-form-label">Email</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" id="email_input" name="email">
+                </div>
+              </div>
+                <div class="form-group row">
+
+                  <label for="inputPassword" class="col-sm-2 col-form-label">性别</label>
+
+                  <div class="col-sm-10">
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" name="gender" id="gender_inlineRadio1" value="M">
+                          <label class="form-check-label" for="gender_inlineRadio1">男</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" name="gender" id="gender_inlineRadio2" value="F">
+                          <label class="form-check-label" for="gender_inlineRadio2">女</label>
+                        </div>
+                  </div>
+                </div>
+
+                <div class="form-group row">
+                  <label for="inputPassword" class="col-sm-2 col-form-label">部门</label>
+                  <div class="col-sm-4">
+                    <select id="dept_select" class="form-control" name="dId">
+                    </select>
+                  </div>
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            <button type="button" class="btn btn-primary" id="addEmp_saveBtn">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class='container'>
         <div class='row'>
             <div class='col-md-12'>
@@ -25,7 +81,7 @@
         </div>
         <div class='row'>
             <div class="col-md-4 offset-md-8">
-                <button type="button" class="btn btn-primary">新增</button>
+                <button type="button" class="btn btn-primary" id="add_modal_btn">新增</button>
                 <button type="button" class="btn btn-danger">删除</button>
             </div>
         </div>
@@ -61,7 +117,11 @@
 
     <script text='type/javascript'>
 
-        getEmps(1);
+        var totalRecord = 0;
+
+        $(function(){
+            getEmps(1);
+        })
 
         function getEmps(pn){
             $.ajax({
@@ -70,9 +130,6 @@
                 type:"GET",
                 success:function(result){
                     console.log(result);
-                    $("#emps_table tbody").html("");
-                    $("#page_info_area").html("");
-                    $("#page_nav_area").html("");
                     build_emps_table(result);
                     build_page_info(result);
                     build_page_nav(result);
@@ -82,6 +139,7 @@
 
 
         function build_page_nav(result){
+            $("#page_nav_area").html("");
             var cur_page = result.data.pageInfo.pageNum;
             var page_total = result.data.pageInfo.pages;
             var page_ul = $("<ul></ul>").addClass("pagination");
@@ -89,9 +147,11 @@
             var prevPageLi = $("<li></li>").addClass("page-item").append($("<a></a>").append("&laquo;").addClass("page-link").attr("onClick","getEmps("+(cur_page-1)+")"));
             var nextPageLi = $("<li></li>").addClass("page-item").append($("<a></a>").append("&raquo;").addClass("page-link").attr("onClick","getEmps("+(cur_page+1)+")"));
             var lastPageLi = $("<li></li>").addClass("page-item").append($("<a></a>").append("末页").addClass("page-link").attr("onClick","getEmps("+page_total+")"));
-            if(result.data.pageInfo.isFirstPage != true){
-                page_ul.append(firstPageLi);
-                page_ul.append(prevPageLi);
+            page_ul.append(firstPageLi);
+            page_ul.append(prevPageLi);
+            if(result.data.pageInfo.isFirstPage == true){
+                firstPageLi.addClass("disabled");
+                prevPageLi.addClass("disabled");
             }
             $.each(result.data.pageInfo.navigatepageNums, function(index, item){
                 if(result.data.pageInfo.pageNum == item)
@@ -101,19 +161,26 @@
             })
             page_ul.append(nextPageLi);
             page_ul.append(lastPageLi);
+            if(result.data.pageInfo.isLastPage == true){
+                nextPageLi.addClass("disabled");
+                lastPageLi.addClass("disabled");
+            }
             $("#page_nav_area").append($("<nav></nav>").append(page_ul))
         }
 
         function build_page_info(result){
+            $("#page_info_area").html("");
             var cur_page = result.data.pageInfo.pageNum;
             var page_size = result.data.pageInfo.pageSize;
             var page_total = result.data.pageInfo.pages;
             var row_total = result.data.pageInfo.total;
             $("#page_info_area").append("当前第"+cur_page+"页码一共"+page_total+"页,共"+row_total+"条记录");
+            totalRecord = row_total;
         }
 
 
         function build_emps_table(result){
+            $("#emps_table tbody").html("");
             var emps = result.data.pageInfo.list;
             $.each(emps,function(index, item){
                 var empIdTd = $("<td></td>").append(item.id)
@@ -134,6 +201,37 @@
                     .appendTo($("#emps_table tbody"))
             })
         }
+
+        $("#add_modal_btn").click(function(){
+            getDepts();
+            $("#insertModal").modal();
+        })
+
+        function getDepts(){
+            $.ajax({
+                url:"depts",
+                type:"GET",
+                success:function(result){
+                    $("#dept_select").html("")
+                    $.each(result.data.depts,function(index, item){
+                        var deptOption = $("<option></option>").append(item.dptName).attr("value",item.id);
+                        deptOption.appendTo($("#dept_select"));
+                    })
+                }
+            })
+        }
+
+        $("#addEmp_saveBtn").click(function(){
+            $.ajax({
+                url:"emps",
+                type:"POST",
+                data:$("#insertModal form").serialize(),
+                success:function(result){
+                    $("#insertModal").modal("hide");
+                    getEmps(totalRecord);
+                }
+            })
+        })
     </script>
 </body>
 </html>

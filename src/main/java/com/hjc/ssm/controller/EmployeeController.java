@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -27,8 +28,16 @@ public class EmployeeController {
     @Autowired
     EmployeeService employeeService;
 
+
+    @RequestMapping(value = "/emps", method = RequestMethod.POST)
+    @ResponseBody
+    public Msg insertEmp(Employee employee){
+        employeeService.insertEmp(employee);
+        return Msg.success();
+    }
+
     //返回Json，客户端平台无关性
-    @RequestMapping("/emps")
+    @RequestMapping(value = "/emps", method = RequestMethod.GET)
     @ResponseBody
     public Msg getEmpsInJson(@RequestParam(value = "pn", defaultValue = "1") Integer pn){
         PageHelper.startPage(pn, 5);
