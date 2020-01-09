@@ -34,6 +34,7 @@ public class EmployeeController {
         PageHelper.startPage(pn, 5);
         List<Employee> allEmps = employeeService.getAllEmps();
         PageInfo pageInfo = new PageInfo(allEmps,5);
+        System.out.println("emps");
         return Msg.success().add("pageInfo", pageInfo);
     }
 
