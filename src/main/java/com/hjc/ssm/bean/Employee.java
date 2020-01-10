@@ -1,12 +1,18 @@
 package com.hjc.ssm.bean;
 
+import org.hibernate.validator.constraints.Email;
+
+import javax.validation.constraints.Pattern;
+
 public class Employee {
     private Integer id;
 
+    @Pattern(regexp = "^[a-zA-Z][a-zA-Z0-9_-]{3,15}$", message = "用户名错误")
     private String empName;
 
     private String gender;
 
+    @Email(message = "邮箱格式不正确")
     private String email;
 
     private Integer dId;

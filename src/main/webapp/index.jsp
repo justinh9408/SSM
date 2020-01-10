@@ -32,12 +32,16 @@
                 <label for="staticEmail" class="col-sm-2 col-form-label">姓名</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" id="empName_input" name="empName">
+                  <div class="invalid-feedback">
+                  </div>
                 </div>
               </div>
               <div class="form-group row">
                 <label for="inputPassword" class="col-sm-2 col-form-label">Email</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" id="email_input" name="email">
+                  <div class="invalid-feedback">
+                  </div>
                 </div>
               </div>
                 <div class="form-group row">
@@ -118,6 +122,7 @@
     <script text='type/javascript'>
 
         var totalRecord = 0;
+        var ajax_validate = "false";
 
         $(function(){
             getEmps(1);
@@ -203,6 +208,10 @@
         }
 
         $("#add_modal_btn").click(function(){
+            $("#insertModal form")[0].reset()
+            $.each($("#insertModal form input"), function(index, item){
+                $(item).removeClass("is-invalid is-valid")
+            })
             getDepts();
             $("#insertModal").modal();
         })
@@ -221,7 +230,62 @@
             })
         }
 
+        function validate_add_form(){
+            var empName = $("#empName_input").val();
+            var email = $("#email_input").val();
+            var regName = /^[a-zA-Z][a-zA-Z0-9_-]{3,15}$/;
+            var regEmail = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+            if(!regName.test(empName)){
+                show_validate_msg("#empName_input","fail","姓名错误");
+                return false;
+            }else{
+                show_validate_msg("#empName_input","success","");
+            }
+            if(!regEmail.test(email)){
+                show_validate_msg("#email_input","fail","邮件格式错误");
+                return false;
+            }else{
+                show_validate_msg("#email_input","success","");
+            }
+            return true;
+        }
+
+        function show_validate_msg(ele, status, msg){
+            $(ele).removeClass("is-invalid is-valid")
+            if(status == "success"){
+                $(ele).addClass("is-valid");
+            }else{
+                $(ele).addClass("is-invalid");
+                $(ele).next("div").html(msg)
+            }
+        }
+
+        $("#empName_input").change(function(){
+            var name = $(this).val()
+            $.ajax({
+                url:"checkEmpName",
+                type:"GET",
+                data:"empName="+name,
+                success:function(result){
+                    if(result.code == 100){
+                        show_validate_msg("#empName_input","success","")
+                        ajax_validate = "true";
+                    }else{
+                        show_validate_msg("#empName_input","fail","用户名不可用")
+                        ajax_validate = "false";
+                    }
+                }
+            })
+        })
+
         $("#addEmp_saveBtn").click(function(){
+            if(!validate_add_form()){
+                console.log("invalid");
+                return;
+            }
+            if(ajax_validate == "false")
+                result;
+
             $.ajax({
                 url:"emps",
                 type:"POST",

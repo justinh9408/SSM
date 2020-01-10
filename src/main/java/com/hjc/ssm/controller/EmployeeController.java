@@ -9,11 +9,15 @@ import org.apache.ibatis.parsing.TokenHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -29,11 +33,35 @@ public class EmployeeController {
     EmployeeService employeeService;
 
 
+//    checkEmpName
+    @ResponseBody
+    @RequestMapping(value = "/checkEmpName", method = RequestMethod.GET)
+    public Msg checkName(@RequestParam("empName") String empName){
+
+        boolean b = employeeService.checkName(empName);
+        if (b) {
+            return Msg.success();
+        }else
+            return Msg.fail();
+    }
+
+
     @RequestMapping(value = "/emps", method = RequestMethod.POST)
     @ResponseBody
-    public Msg insertEmp(Employee employee){
-        employeeService.insertEmp(employee);
-        return Msg.success();
+    public Msg insertEmp(@Valid Employee employee, BindingResult bindingResult){
+        if (bindingResult.hasErrors()) {
+            HashMap<String, String> errorMap = new HashMap<String, String>();
+            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+            for (FieldError fieldError: fieldErrors) {
+                String field = fieldError.getField();
+                String defaultMessage = fieldError.getDefaultMessage();
+                errorMap.put(field, defaultMessage);
+            }
+            return Msg.fail().add("errorMap", errorMap);
+        }else {
+            employeeService.insertEmp(employee);
+            return Msg.success();
+        }
     }
 
     //返回Json，客户端平台无关性
