@@ -5,16 +5,12 @@ import com.github.pagehelper.PageInfo;
 import com.hjc.ssm.bean.Employee;
 import com.hjc.ssm.service.EmployeeService;
 import com.hjc.ssm.util.Msg;
-import org.apache.ibatis.parsing.TokenHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.HashMap;
@@ -32,6 +28,21 @@ public class EmployeeController {
     @Autowired
     EmployeeService employeeService;
 
+    @ResponseBody
+    @RequestMapping(value = "/emp/{id}", method = RequestMethod.PUT)
+    public Msg updateEmp(Employee employee){
+        System.out.println("update: " + employee);
+        employeeService.updateEmp(employee);
+        return Msg.success();
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/emp/{id}", method = RequestMethod.GET)
+    public Msg getEmpById(@PathVariable("id") Integer id){
+        System.out.println("getEmpById");
+        Employee employee = employeeService.getEmpById(id);
+        return Msg.success().add("emp", employee);
+    }
 
 //    checkEmpName
     @ResponseBody

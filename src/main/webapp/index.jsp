@@ -17,6 +17,66 @@
 </head>
 <body>
 
+    <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">修改员工</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group row">
+                <label for="staticEmail" class="col-sm-2 col-form-label">姓名</label>
+                <div class="col-sm-10">
+                  <p class="form-control-static" id="empName_update_static">
+                  <div class="invalid-feedback">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputPassword" class="col-sm-2 col-form-label">Email</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" id="update_email_input" name="email">
+                  <div class="invalid-feedback">
+                  </div>
+                </div>
+              </div>
+                <div class="form-group row">
+
+                  <label for="inputPassword" class="col-sm-2 col-form-label">性别</label>
+
+                  <div class="col-sm-10">
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" name="gender" id="update_gender_inlineRadio1" value="M">
+                          <label class="form-check-label" for="gender_inlineRadio1">男</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" name="gender" id="update_gender_inlineRadio2" value="F">
+                          <label class="form-check-label" for="gender_inlineRadio2">女</label>
+                        </div>
+                  </div>
+                </div>
+
+                <div class="form-group row">
+                  <label for="inputPassword" class="col-sm-2 col-form-label">部门</label>
+                  <div class="col-sm-4">
+                    <select id="update_dept_select" class="form-control" name="dId">
+                    </select>
+                  </div>
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            <button type="button" class="btn btn-primary" id="update_Emp_saveBtn">修改</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal fade" id="insertModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -121,7 +181,7 @@
 
     <script text='type/javascript'>
 
-        var totalRecord = 0;
+        var totalRecord = 0, curPage = 0;
         var ajax_validate = "false";
 
         $(function(){
@@ -181,6 +241,7 @@
             var row_total = result.data.pageInfo.total;
             $("#page_info_area").append("当前第"+cur_page+"页码一共"+page_total+"页,共"+row_total+"条记录");
             totalRecord = row_total;
+            curPage = cur_page;
         }
 
 
@@ -193,8 +254,8 @@
                 var empGenderTd = $("<td></td>").append(item.gender)
                 var empEmailTd = $("<td></td>").append(item.email)
                 var empDeptTd = $("<td></td>").append(item.department.dptName)
-                var editBtn = $("<button></button>").addClass("btn btn-primary btn-sm").append("更改")
-                var deleteBtn = $("<button></button>").addClass("btn btn-danger btn-sm").append("删除")
+                var editBtn = $("<button></button>").addClass("btn btn-primary btn-sm edit_Emp_Btn").append("更改").attr("edit-id",item.id)
+                var deleteBtn = $("<button></button>").addClass("btn btn-danger btn-sm delete_Emp_Btn").append("删除")
                 var btnsTd = $("<td></td>").append(editBtn).append(" ").append(deleteBtn)
                 $("<tr></tr>").append(empIdTd)
                     .append(empIdTd)
@@ -212,11 +273,12 @@
             $.each($("#insertModal form input"), function(index, item){
                 $(item).removeClass("is-invalid is-valid")
             })
-            getDepts();
+            getDepts("#dept_select");
             $("#insertModal").modal();
         })
 
-        function getDepts(){
+        function getDepts(ele){
+            $(ele).empty();
             $.ajax({
                 url:"depts",
                 type:"GET",
@@ -224,7 +286,7 @@
                     $("#dept_select").html("")
                     $.each(result.data.depts,function(index, item){
                         var deptOption = $("<option></option>").append(item.dptName).attr("value",item.id);
-                        deptOption.appendTo($("#dept_select"));
+                        deptOption.appendTo($(ele));
                     })
                 }
             })
@@ -293,6 +355,42 @@
                 success:function(result){
                     $("#insertModal").modal("hide");
                     getEmps(totalRecord);
+                }
+            })
+        })
+
+        $( document ).on( "click", ".edit_Emp_Btn", function(){
+            getDepts("#updateModal select");
+            getEmpById($(this).attr("edit-id"));
+            $("#update_Emp_saveBtn").attr("edit-id",$(this).attr("edit-id"));
+            $("#updateModal").modal();
+        } );
+
+        function getEmpById(id){
+            console.log("get emp by id")
+            $.ajax({
+                url:"emp/"+id,
+                type:"GET",
+                success:function(result){
+                    var empData = result.data.emp;
+                    console.log(empData)
+                    $("#empName_update_static").html(empData.empName)
+                    $("#update_email_input").val(empData.email)
+                    $("#updateModal input[name=gender]").val([empData.gender]);
+                    $("#update_dept_select").val([empData.dId]);
+                }
+            })
+        }
+
+        $("#update_Emp_saveBtn").click(function(){
+            $.ajax({
+                url:"emp/"+$(this).attr("edit-id"),
+                type:"PUT",
+                data:$("#updateModal form").serialize(),
+                success:function(){
+                    alert("update success!");
+                    $("#updateModal").modal("hide");
+                    getEmps(curPage);
                 }
             })
         })
