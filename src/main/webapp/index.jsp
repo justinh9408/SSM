@@ -146,7 +146,7 @@
         <div class='row'>
             <div class="col-md-4 offset-md-8">
                 <button type="button" class="btn btn-primary" id="add_modal_btn">新增</button>
-                <button type="button" class="btn btn-danger">删除</button>
+                <button type="button" class="btn btn-danger" id="delete_all_btn">删除</button>
             </div>
         </div>
         <div class='row'>
@@ -154,6 +154,9 @@
                 <table class='table table-hover' id="emps_table">
                     <thead>
                         <tr>
+                            <th>
+                                <input type="checkbox" id='emp_checkAll'/>
+                            </th>
                             <th>ID</th>
                             <th>empName</th>
                             <th>gender</th>
@@ -249,15 +252,16 @@
             $("#emps_table tbody").html("");
             var emps = result.data.pageInfo.list;
             $.each(emps,function(index, item){
+                var emp_checkbox = $("<td><input type='checkbox' class='emp_check'></td>");
                 var empIdTd = $("<td></td>").append(item.id)
                 var empNameTd = $("<td></td>").append(item.empName)
                 var empGenderTd = $("<td></td>").append(item.gender)
                 var empEmailTd = $("<td></td>").append(item.email)
                 var empDeptTd = $("<td></td>").append(item.department.dptName)
                 var editBtn = $("<button></button>").addClass("btn btn-primary btn-sm edit_Emp_Btn").append("更改").attr("edit-id",item.id)
-                var deleteBtn = $("<button></button>").addClass("btn btn-danger btn-sm delete_Emp_Btn").append("删除")
+                var deleteBtn = $("<button></button>").addClass("btn btn-danger btn-sm delete_Emp_Btn").append("删除").attr("edit-id",item.id)
                 var btnsTd = $("<td></td>").append(editBtn).append(" ").append(deleteBtn)
-                $("<tr></tr>").append(empIdTd)
+                $("<tr></tr>").append(emp_checkbox)
                     .append(empIdTd)
                     .append(empNameTd)
                     .append(empGenderTd)
@@ -366,6 +370,20 @@
             $("#updateModal").modal();
         } );
 
+        $( document ).on( "click", ".delete_Emp_Btn", function(){
+            if(confirm("确认删除"+$(this).parents("tr").find("td:eq(1)").text()+"的数据吗")){
+                $.ajax({
+                    url:"emp/"+$(this).attr("edit-id"),
+                    type:"DELETE",
+                    success:function(result){
+                        alert("成功")
+                        getEmps(curPage);
+                    }
+                });
+
+            }
+        });
+
         function getEmpById(id){
             console.log("get emp by id")
             $.ajax({
@@ -394,6 +412,41 @@
                 }
             })
         })
+
+        $("#emp_checkAll").click(function(){
+            $(".emp_check").prop("checked", $(this).prop("checked"))
+        })
+
+        $(document).on("click",".emp_check",function(){
+            if($(".emp_check:checked").length == 5){
+                $("#emp_checkAll").prop("checked", $(this).prop("checked"))
+                console.log("...all checked")
+            }else(
+                $("#emp_checkAll").prop("checked", false)
+            )
+        })
+
+        $("#delete_all_btn").click(function(){
+            var empsName_chain = "", empsId_chain="";
+            $.each($(".emp_check:checked"), function(index, item){
+                empsName_chain = empsName_chain + $(this).parents("tr").find("td:eq(2)").text() + ",";
+                empsId_chain = empsId_chain + $(this).parents("tr").find("td:eq(1)").text() + "-";
+            })
+            empsName_chain = empsName_chain.substring(0,empsName_chain.length-1)
+            empsId_chain = empsId_chain.substring(0,empsId_chain.length-1)
+            if(confirm("确认删除"+empsName_chain+"吗？")){
+                $.ajax({
+                    url:"emp/"+empsId_chain,
+                    type:"DELETE",
+                    success:function(result){
+                        alert("删除成功");
+                        getEmps(curPage);
+                    }
+                })
+            }
+        })
+
+
     </script>
 </body>
 </html>

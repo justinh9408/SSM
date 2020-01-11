@@ -3,6 +3,7 @@ package com.hjc.ssm.service;
 import com.hjc.ssm.bean.Employee;
 import com.hjc.ssm.bean.EmployeeExample;
 import com.hjc.ssm.dao.EmployeeMapper;
+import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,8 @@ public class EmployeeService {
     @Autowired
     EmployeeMapper employeeMapper;
 
+    @Autowired
+    SqlSession sqlSession;
 
     public List<Employee> getAllEmps() {
         EmployeeExample example = new EmployeeExample();
@@ -49,5 +52,17 @@ public class EmployeeService {
 
     public void updateEmp(Employee employee) {
         employeeMapper.updateByPrimaryKeySelective(employee);
+    }
+
+    public void deleteEmpById(Integer id) {
+        employeeMapper.deleteByPrimaryKey(id);
+    }
+
+    public void deleteEmpBatch(List<Integer> ids_int) {
+        EmployeeMapper batchMapper = sqlSession.getMapper(EmployeeMapper.class);
+        EmployeeExample employeeExample = new EmployeeExample();
+        EmployeeExample.Criteria criteria = employeeExample.createCriteria();
+        criteria.andIdIn(ids_int);
+        batchMapper.deleteByExample(employeeExample);
     }
 }
